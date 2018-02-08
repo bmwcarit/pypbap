@@ -1,4 +1,6 @@
-#!/usr/bin/env python
+# Copyright (c) 2018 Kannan Subramani <Kannan.Subramani@bmw.de>
+# SPDX-License-Identifier: GPL-3.0
+# -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
 

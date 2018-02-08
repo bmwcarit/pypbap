@@ -1,6 +1,6 @@
+# Copyright (c) 2018 Kannan Subramani <Kannan.Subramani@bmw.de>
+# SPDX-License-Identifier: GPL-3.0
 # -*- coding: utf-8 -*-
-# BMW Car IT GmbH. (Kannan.Subramani@bmw.de)
-# Licensed under the GPL-3.0. Look into the License.txt for more information
 """VCard helper module is used to parse vcard strings to dict(version independent) and vice versa"""
 # pylint: disable=invalid-name
 
