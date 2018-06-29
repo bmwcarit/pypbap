@@ -436,9 +436,9 @@ class X_IRMC_CALL_DATETIME(VCardProperty_CharsetEncodingParamNormalized):
     IrMC [13] defined X-IRMC-CALL-DATETIME property that extends the vCard
     specification. This attribute can be used in combination with three newly created
     property parameters:
-    • MISSED
-    • RECEIVED
-    • DIALED
+    - MISSED
+    - RECEIVED
+    - DIALED
     These are used to indicate the nature of the call that is time-stamped with X-IRMCCALL-DATETIME.
 
     For instance, a call that was missed on March 20th, 2005 at 10 am would be stamped:

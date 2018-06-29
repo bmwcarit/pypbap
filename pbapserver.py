@@ -8,7 +8,8 @@ import logging
 import os
 import sys
 
-from bluetooth import OBEX_UUID, RFCOMM_UUID, L2CAP_UUID, PORT_ANY
+# from bluetooth import OBEX_UUID, RFCOMM_UUID, L2CAP_UUID,
+from bluetooth import PORT_ANY
 from PyOBEX import requests, server
 
 import pbapheaders as headers
@@ -426,25 +427,28 @@ class PbapServer(server.Server):
         service_profiles = [("1130", 0x0101)]
         provider = "BMW CarIT GmbH"
         description = "Phonebook Access Profile - PSE"
-        protocols = [L2CAP_UUID, RFCOMM_UUID, OBEX_UUID]
+        # Adding protocols to service discovery crashes the process
+        # protocols = [L2CAP_UUID, RFCOMM_UUID, OBEX_UUID]
 
         return server.Server.start_service(
             self, port, name, uuid, service_classes, service_profiles,
-            provider, description, protocols
+            provider, description, []
         )
 
 
 def run_server(device_address, rootdir, use_fs):
-
     # Run the server in a function so that, if the server causes an exception
     # to be raised, the server instance will be deleted properly, giving us a
     # chance to create a new one and start the service again without getting
     # errors about the address still being in use.
+    pbap_server = PbapServer(device_address, rootdir, use_fs)
+    socket = pbap_server.start_service(port=PORT_ANY)
     try:
-        pbap_server = PbapServer(device_address, rootdir, use_fs)
-        socket = pbap_server.start_service(port=PORT_ANY)
         pbap_server.serve(socket)
-    except IOError:
+    except KeyboardInterrupt:
+        logger.info("Exiting the pbapserver...")
+        exit(0)
+    finally:
         pbap_server.stop_service(socket)
 
 

@@ -21,8 +21,9 @@ setup(
     packages=find_packages(),
     dependency_links=["https://bitbucket.org/dboddie/pyobex/get/tip.zip#egg=pyobex-0.26"],
     install_requires=[
-        "pybluez",
+        "pybluez==0.22",
         "pyobex>=0.26",
-        "pymongo"
+        "pymongo",
+        "cmd2==0.8.8"
     ],
 )
