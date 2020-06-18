@@ -40,7 +40,7 @@ class PBAPClient(client.Client):
                 "MaxListCount": headers.MaxListCount(max_list_count),
                 "ListStartOffset": headers.ListStartOffset(list_startoffset)}
         application_parameters = headers.App_Parameters(data, encoded=False)
-        header_list = [headers.Type("x-bt/phonebook")]
+        header_list = [headers.PBAPType("x-bt/phonebook")]
         if application_parameters.data:
             header_list.append(application_parameters)
 
@@ -63,7 +63,7 @@ class PBAPClient(client.Client):
                         "SearchAttribute": headers.SearchAttribute(search_attribute),
                         })
         application_parameters = headers.App_Parameters(data, encoded=False)
-        header_list = [headers.Type("x-bt/vcard-listing")]
+        header_list = [headers.PBAPType("x-bt/vcard-listing")]
         if application_parameters.data:
             header_list.append(application_parameters)
 
@@ -80,7 +80,7 @@ class PBAPClient(client.Client):
                 "Format": headers.Format(format_)}
 
         application_parameters = headers.App_Parameters(data, encoded=False)
-        header_list = [headers.Type("x-bt/vcard")]
+        header_list = [headers.PBAPType("x-bt/vcard")]
         if application_parameters.data:
             header_list.append(application_parameters)
 

@@ -72,6 +72,10 @@ class VariableLengthProperty(AppParamProperty):
         return struct.unpack(self.fmt.format(len=length), data)[0]
 
 
+class PBAPType(UnicodeHeader):
+    code = 0x42
+
+
 class Order(OneByteProperty):
     tagid = 0x01
 
