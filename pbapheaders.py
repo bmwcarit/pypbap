@@ -142,7 +142,7 @@ def extended_decode(self):
 
 
 def extended_encode(self, data_dict):
-    data = ""
+    data = b''
     for item in data_dict.values():
         if item is None:
             continue
