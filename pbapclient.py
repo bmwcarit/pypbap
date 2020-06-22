@@ -40,7 +40,7 @@ class PBAPClient(client.Client):
                 "MaxListCount": headers.MaxListCount(max_list_count),
                 "ListStartOffset": headers.ListStartOffset(list_startoffset)}
         application_parameters = headers.App_Parameters(data, encoded=False)
-        header_list = [headers.Type("x-bt/phonebook")]
+        header_list = [headers.PBAPType("x-bt/phonebook")]
         if application_parameters.data:
             header_list.append(application_parameters)
 
@@ -63,7 +63,7 @@ class PBAPClient(client.Client):
                         "SearchAttribute": headers.SearchAttribute(search_attribute),
                         })
         application_parameters = headers.App_Parameters(data, encoded=False)
-        header_list = [headers.Type("x-bt/vcard-listing")]
+        header_list = [headers.PBAPType("x-bt/vcard-listing")]
         if application_parameters.data:
             header_list.append(application_parameters)
 
@@ -80,7 +80,7 @@ class PBAPClient(client.Client):
                 "Format": headers.Format(format_)}
 
         application_parameters = headers.App_Parameters(data, encoded=False)
-        header_list = [headers.Type("x-bt/vcard")]
+        header_list = [headers.PBAPType("x-bt/vcard")]
         if application_parameters.data:
             header_list.append(application_parameters)
 
@@ -149,7 +149,7 @@ class REPL(cmd2.Cmd):
     @cmd2.options([], arg_desc="server_address")
     def do_connect(self, line, opts):
         profile_id = "1130"  # profile id of PBAP
-        service_id = "\x79\x61\x35\xf0\xf0\xc5\x11\xd8\x09\x66\x08\x00\x20\x0c\x9a\x66"
+        service_id = b'\x79\x61\x35\xf0\xf0\xc5\x11\xd8\x09\x66\x08\x00\x20\x0c\x9a\x66'
         server_address = line
         if not server_address:
             raise ValueError("server_address should not be empty")
