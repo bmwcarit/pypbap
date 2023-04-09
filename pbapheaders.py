@@ -70,11 +70,11 @@ class VariableLengthProperty(AppParamProperty):
 
     def decode(self):
         headers, data = super(VariableLengthProperty, self).decode()
-        tagid, length = headers
+        _, length = headers
         return struct.unpack(self.fmt.format(len=length), data)[0]
 
 
-class PBAPType(UnicodeHeader):
+class PBAPType(Type):
     code = 0x42
 
 

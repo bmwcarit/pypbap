@@ -48,7 +48,7 @@ class PBAPClient(client.Client):
             "ListStartOffset": headers.ListStartOffset(list_startoffset),
         }
         application_parameters = headers.App_Parameters(data, encoded=False)
-        header_list = [headers.PBAPType("x-bt/phonebook")]
+        header_list = [headers.PBAPType(b"x-bt/phonebook")]
         if application_parameters.data:
             header_list.append(application_parameters)
 
