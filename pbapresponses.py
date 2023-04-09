@@ -19,8 +19,10 @@ class Service_Unavailable(FailureResponse):
     code = OBEX_Service_Unavailable = 0xD3
 
 
-ResponseHandler.message_dict.update({
-    Not_Acceptable.code: Not_Acceptable,
-    Not_Implemented.code: Not_Implemented,
-    Service_Unavailable.code: Service_Unavailable
-})
+ResponseHandler.message_dict.update(
+    {
+        Not_Acceptable.code: Not_Acceptable,
+        Not_Implemented.code: Not_Implemented,
+        Service_Unavailable.code: Service_Unavailable,
+    }
+)

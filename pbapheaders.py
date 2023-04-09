@@ -64,7 +64,9 @@ class VariableLengthProperty(AppParamProperty):
     fmt = "{len}s"
 
     def encode(self, data):
-        return super(VariableLengthProperty, self).encode(struct.pack(self.fmt.format(len=len(data)), data))
+        return super(VariableLengthProperty, self).encode(
+            struct.pack(self.fmt.format(len=len(data)), data)
+        )
 
     def decode(self):
         headers, data = super(VariableLengthProperty, self).decode()
@@ -122,13 +124,14 @@ app_parameters_dict = {
     0x06: Filter,
     0x07: Format,
     0x08: PhonebookSize,
-    0x09: NewMissedCalls
+    0x09: NewMissedCalls,
 }
 
 
 # Sample App Parameters data
 # code | length | data
 # 4c | 00 18 | 06 08 00 00 00 3f d0 00 00 80 07 01 00 04 02 00 00 05 02 00 00
+
 
 def extended_decode(self):
     # assumption:
@@ -140,13 +143,15 @@ def extended_decode(self):
         tagid = ord(data[0])
         length = ord(data[1])
         app_param_class = app_parameters_dict[tagid]
-        res_dict[app_param_class.__name__] = app_param_class(data[:length + 2], encoded=True)
-        data = data[length + 2:]
+        res_dict[app_param_class.__name__] = app_param_class(
+            data[: length + 2], encoded=True
+        )
+        data = data[length + 2 :]
     return res_dict
 
 
 def extended_encode(self, data_dict):
-    data = b''
+    data = b""
     for item in data_dict.values():
         if item is None:
             continue
