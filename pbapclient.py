@@ -193,11 +193,11 @@ class REPL(cmd2.Cmd):
     connect_parser.add_argument("line", help="server_address")
 
     @cmd2.with_argparser(connect_parser)
-    def do_connect(self, line):
+    def do_connect(self, opts):
         """Connect to PBABClient"""
         profile_id = "1130"  # profile id of PBAP
         service_id = b"\x79\x61\x35\xf0\xf0\xc5\x11\xd8\x09\x66\x08\x00\x20\x0c\x9a\x66"
-        server_address = line
+        server_address = opts.line
         if not server_address:
             raise ValueError("server_address should not be empty")
         logger.info("Finding PBAP service ...")
