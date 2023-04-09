@@ -337,26 +337,24 @@ class REPL(cmd2.Cmd):
             name=line, filter_=opts.filter, format_=opts.format
         )
         if result is not None:
-            header, data = result
+            _, data = result
             logger.info("Result of pull_vcard_entry:\n%s", data)
 
-    # @cmd2.options(
-    #     [
-    #         make_option(
-    #             "--to-parent",
-    #             action="store_true",
-    #             default=False,
-    #             help="navigate to parent dir",
-    #         ),
-    #         make_option(
-    #             "--to-root",
-    #             action="store_true",
-    #             default=False,
-    #             help="navigate to root dir",
-    #         ),
-    #     ],
-    #     arg_desc="[folder_name]",
-    # )
+    set_phonebook_parser = cmd2.Cmd2ArgumentParser()
+    set_phonebook_parser.add_argument(
+        "--to-parent",
+        action="store_true",
+        default=False,
+        help="navigate to parent dir",
+    )
+    set_phonebook_parser.add_argument(
+        "--to-root",
+        action="store_true",
+        default=False,
+        help="navigate to root dir",
+    )
+
+    @cmd2.with_argparser(set_phonebook_parser)
     def do_set_phonebook(self, line, opts):
         """Set current folder path of pbapserver virtual folder"""
         result = self.client.set_phonebook(
