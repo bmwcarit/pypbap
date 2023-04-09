@@ -190,14 +190,14 @@ class REPL(cmd2.Cmd):
 
     # connect_parser
     connect_parser = cmd2.Cmd2ArgumentParser()
-    connect_parser.add_argument("line", help="server_address")
+    connect_parser.add_argument("server_address", help="server_address")
 
     @cmd2.with_argparser(connect_parser)
     def do_connect(self, opts):
         """Connect to PBABClient"""
         profile_id = "1130"  # profile id of PBAP
         service_id = b"\x79\x61\x35\xf0\xf0\xc5\x11\xd8\x09\x66\x08\x00\x20\x0c\x9a\x66"
-        server_address = opts.line
+        server_address = opts.server_address
         if not server_address:
             raise ValueError("server_address should not be empty")
         logger.info("Finding PBAP service ...")
@@ -263,13 +263,13 @@ class REPL(cmd2.Cmd):
         type=int,
         help="offset of first entry to be returned",
     )
-    pull_phonebook_parser.add_argument("line", help="phonebook_name")
+    pull_phonebook_parser.add_argument("phonebook_name", help="phonebook_name")
 
     @cmd2.with_argparser(pull_phonebook_parser)
-    def do_pull_phonebook(self, line, opts):
+    def do_pull_phonebook(self, opts):
         """Returns phonebook as per requested options"""
         result = self.client.pull_phonebook(
-            name=line,
+            name=opts.phonebook_name,
             filter_=opts.filter,
             format_=opts.format,
             max_list_count=opts.max_count,
@@ -295,6 +295,11 @@ class REPL(cmd2.Cmd):
         help="SearchAttribute {Name | Number | Sound }",
     )
     pull_vcard_listing_parser.add_argument(
+        "--search-value",
+        default=None,
+        help="SearchValue {<text string>}",
+    )
+    pull_vcard_listing_parser.add_argument(
         "-c",
         "--max-count",
         default=65535,
@@ -308,13 +313,13 @@ class REPL(cmd2.Cmd):
         type=int,
         help="offset of first entry to be returned",
     )
-    pull_vcard_listing_parser.add_argument("line", help="vcard_folder")
+    pull_vcard_listing_parser.add_argument("vcard_folder", help="vcard_folder")
 
     @cmd2.with_argparser(pull_vcard_listing_parser)
     def do_pull_vcard_listing(self, opts):
         """Returns vcardlisting as per requested options"""
         result = self.client.pull_vcard_listing(
-            name=opts.line,
+            name=opts.vcard_folder,
             order=opts.order,
             search_value=opts.search_value,
             search_attribute=opts.search_attribute,
@@ -340,13 +345,13 @@ class REPL(cmd2.Cmd):
         type=int,
         help="vcard format",
     )
-    pull_vcard_entry_parser.add_argument("line", help="vcard_handle")
+    pull_vcard_entry_parser.add_argument("vcard_handle", help="vcard_handle")
 
     @cmd2.with_argparser(pull_vcard_entry_parser)
     def do_pull_vcard_entry(self, opts):
         """Returns a single vcardentry as per requested options"""
         result = self.client.pull_vcard_entry(
-            name=opts.line, filter_=opts.filter, format_=opts.format
+            name=opts.vcard_handle, filter_=opts.filter, format_=opts.format
         )
         if result is not None:
             _, data = result
@@ -365,13 +370,13 @@ class REPL(cmd2.Cmd):
         default=False,
         help="navigate to root dir",
     )
-    set_phonebook_parser.add_argument("line", help="[folder_name]")
+    set_phonebook_parser.add_argument("folder_name", help="[folder_name]")
 
     @cmd2.with_argparser(set_phonebook_parser)
     def do_set_phonebook(self, opts):
         """Set current folder path of pbapserver virtual folder"""
         result = self.client.set_phonebook(
-            name=opts.line, to_parent=opts.to_parent, to_root=opts.to_root
+            name=opts.folder_name, to_parent=opts.to_parent, to_root=opts.to_root
         )
         if result is not None:
             logger.info("Result of set_phonebook:\n%s", result)
