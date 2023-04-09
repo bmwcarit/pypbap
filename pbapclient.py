@@ -189,9 +189,8 @@ class REPL(cmd2.Cmd):
         atexit.register(readline.write_history_file, history_file)
 
     # @cmd2.options([], arg_desc="server_address")
-    def do_connect(self, line, opts):
-        self.add_settable(cmd2.Settable(name="server_address", val_type=str))
-
+    def do_connect(self, line):
+        """Connect to PBABClient"""
         profile_id = "1130"  # profile id of PBAP
         service_id = b"\x79\x61\x35\xf0\xf0\xc5\x11\xd8\x09\x66\x08\x00\x20\x0c\x9a\x66"
         server_address = line
@@ -217,8 +216,8 @@ class REPL(cmd2.Cmd):
         # self.prompt = self.colorize("pbap> ", "green")
         self.prompt = cmd2.ansi.style("pbap> ", fg=cmd2.ansi.Fg.GREEN)
 
-    # @cmd2.options([], arg_desc="")
-    def do_disconnect(self, line, opts):
+    def do_disconnect(self):
+        """Disconnect from PBABClient"""
         if self.client is None:
             logger.error(
                 "PBAPClient is not even connected.. Connect and then try disconnect"
@@ -230,33 +229,37 @@ class REPL(cmd2.Cmd):
         # self.prompt = self.colorize("pbap> ", "yellow")
         self.prompt = cmd2.ansi.style("pbap> ", fg=cmd2.ansi.Fg.YELLOW)
 
-    # @cmd2.options(
-    #     [
-    #         make_option(
-    #             "-f",
-    #             "--filter",
-    #             default=0x00000000,
-    #             type=int,
-    #             help="Attributes filter mask",
-    #         ),
-    #         make_option("-t", "--format", default=0, type=int, help="vcard format"),
-    #         make_option(
-    #             "-c",
-    #             "--max-count",
-    #             default=65535,
-    #             type=int,
-    #             help="maximum number of contacts to be returned",
-    #         ),
-    #         make_option(
-    #             "-o",
-    #             "--start-offset",
-    #             default=0,
-    #             type=int,
-    #             help="offset of first entry to be returned",
-    #         ),
-    #     ],
-    #     arg_desc="phonebook_name",
-    # )
+    pull_phonebook_parser = cmd2.Cmd2ArgumentParser()
+    pull_phonebook_parser.add_argument(
+        "-f",
+        "--filter",
+        default=0x00000000,
+        type=int,
+        help="Attributes filter mask",
+    )
+    pull_phonebook_parser.add_argument(
+        "-t",
+        "--format",
+        default=0,
+        type=int,
+        help="vcard format",
+    )
+    pull_phonebook_parser.add_argument(
+        "-c",
+        "--max-count",
+        default=65535,
+        type=int,
+        help="Maximum number of contacts to be returned",
+    )
+    pull_phonebook_parser.add_argument(
+        "-o",
+        "--start-offset",
+        default=0,
+        type=int,
+        help="offset of first entry to be returned",
+    )
+
+    @cmd2.with_argparser(pull_phonebook_parser)
     def do_pull_phonebook(self, line, opts):
         """Returns phonebook as per requested options"""
         result = self.client.pull_phonebook(
@@ -364,7 +367,7 @@ class REPL(cmd2.Cmd):
             logger.info("Result of set_phonebook:\n%s", result)
 
     # @cmd2.options([], arg_desc="server_address [folder_name]")
-    def do_mirror_vfolder(self, line, opts):
+    def do_mirror_vfolder(self, line, _):
         """Downloads phonebook from pbapserver and save it in virtual folder architecture in FS"""
         args = line.split()
         self.do_connect(args[0] if len(args) else "")
@@ -417,7 +420,9 @@ class REPL(cmd2.Cmd):
                         continue
                     hdrs, card = response
                     logger.info(card)
-                    with open(os.path.join(current_dir, name), "w+") as f:
+                    with open(
+                        os.path.join(current_dir, name), "w+", encoding="latin1"
+                    ) as f:
                         f.write(card)
 
                 logger.debug("current_dir = %s", current_dir)
@@ -448,11 +453,12 @@ class REPL(cmd2.Cmd):
                 with open(
                     os.path.join(current_dir, prefix, "telecom", pbobject + ".vcf"),
                     "w+",
+                    encoding="latin1",
                 ) as f:
                     f.write(phonebook)
                 logger.info(hdrs)
 
-        self.do_disconnect("")
+        self.do_disconnect()
 
     do_q = cmd2.Cmd.do_quit
 
