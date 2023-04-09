@@ -72,7 +72,8 @@ class PBAPClient(client.Client):
         list_startoffset=0,
     ):
         """Retrieves phonebook listing object from current folder"""
-        logger.info("Requesting pull_vcard_listing with parameters %s", str(locals()))
+        info = f"Requesting pull_vcard_listing with parameters {str(locals())}"
+        logger.info(info)
         data = {
             "Order": headers.Order(order),
             "MaxListCount": headers.MaxListCount(max_list_count),
@@ -86,7 +87,7 @@ class PBAPClient(client.Client):
                 }
             )
         application_parameters = headers.App_Parameters(data, encoded=False)
-        header_list = [headers.PBAPType("x-bt/vcard-listing")]
+        header_list = [headers.PBAPType(b"x-bt/vcard-listing")]
         if application_parameters.data:
             header_list.append(application_parameters)
 
@@ -94,11 +95,8 @@ class PBAPClient(client.Client):
         if not isinstance(response, tuple) and isinstance(
             response, responses.FailureResponse
         ):
-            logger.error(
-                "pull_vcard_listing failed for pbobject '%s'. reason = %s",
-                name,
-                response,
-            )
+            err = f"pull_vcard_listing failed for pbobject '{name}'. reason = {response}"
+            logger.error(err)
             return
         return response
 
@@ -110,7 +108,7 @@ class PBAPClient(client.Client):
         data = {"Filter": headers.Filter(filter_), "Format": headers.Format(format_)}
 
         application_parameters = headers.App_Parameters(data, encoded=False)
-        header_list = [headers.PBAPType("x-bt/vcard")]
+        header_list = [headers.PBAPType(b"x-bt/vcard")]
         if application_parameters.data:
             header_list.append(application_parameters)
 
