@@ -152,7 +152,8 @@ class PBAPClient(client.Client):
         if not isinstance(response, tuple) and isinstance(
             response, responses.FailureResponse
         ):
-            logger.error("set_phonebook failed. reason = %s", name, response)
+            err = f"set_phonebook failed. reason = {response}"
+            logger.error(err)
             return
 
         if to_root:
@@ -169,9 +170,7 @@ class REPL(cmd2.Cmd):
 
     def __init__(self):
         cmd2.Cmd.__init__(self)
-        # self.prompt = self.colorize("pbap> ", "yellow")
         self.prompt = cmd2.ansi.style("pbap> ", fg=cmd2.ansi.Fg.YELLOW)
-        # self.intro = self.colorize("Welcome to the PhoneBook Access Profile!", "green")
         self.intro = cmd2.ansi.style(
             "Welcome to the PhoneBook Access Profile!", fg=cmd2.ansi.Fg.GREEN
         )
@@ -217,7 +216,6 @@ class REPL(cmd2.Cmd):
             logger.error("Connect Failed, Terminating the Pbap client..")
             sys.exit(2)
         logger.info("Connect success")
-        # self.prompt = self.colorize("pbap> ", "green")
         self.prompt = cmd2.ansi.style("pbap> ", fg=cmd2.ansi.Fg.GREEN)
 
     def do_disconnect(self):
@@ -230,7 +228,6 @@ class REPL(cmd2.Cmd):
         logger.debug("Disconnecting pbap client with pbap server")
         self.client.disconnect()
         self.client = None
-        # self.prompt = self.colorize("pbap> ", "yellow")
         self.prompt = cmd2.ansi.style("pbap> ", fg=cmd2.ansi.Fg.YELLOW)
 
     # pull_phonebook_parser
@@ -403,11 +400,7 @@ class REPL(cmd2.Cmd):
                 current_dir = os.path.join(telecom_dir, pbobject)
                 os.makedirs(current_dir)
                 # Access the list of vcards in the phone's internal phone book.
-                response = self.client.pull_vcard_listing(
-                    "{prefix}telecom/{pbobject}".format(
-                        prefix=prefix, pbobject=pbobject
-                    )
-                )
+                response = self.client.pull_vcard_listing(f"{prefix}telecom/{pbobject}")
                 if response is None:
                     logger.error(
                         "vcard-listing get is failed for pbobject '%s'", pbobject
@@ -427,11 +420,7 @@ class REPL(cmd2.Cmd):
 
                 logger.info("\nCards in %stelecom/%s\n", prefix, pbobject)
                 # Request all the file names obtained earlier.
-                self.client.set_phonebook(
-                    "{prefix}telecom/{pbobject}".format(
-                        prefix=prefix, pbobject=pbobject
-                    )
-                )
+                self.client.set_phonebook(f"{prefix}telecom/{pbobject}")
                 for name in names:
                     response = self.client.pull_vcard_entry(name)
                     if response is None:
@@ -459,11 +448,7 @@ class REPL(cmd2.Cmd):
                 logger.info(
                     "\nThe phonebook in %s/telecom/%s as one vcard\n", prefix, pbobject
                 )
-                response = self.client.pull_phonebook(
-                    "{prefix}telecom/{pbobject}.vcf".format(
-                        prefix=prefix, pbobject=pbobject
-                    )
-                )
+                response = self.client.pull_phonebook(f"{prefix}telecom/{pbobject}.vcf")
                 if response is None:
                     logger.error("phonebook get is failed for pbobject '%s'", pbobject)
                     continue
@@ -473,8 +458,8 @@ class REPL(cmd2.Cmd):
                     os.path.join(current_dir, prefix, "telecom", pbobject + ".vcf"),
                     "w+",
                     encoding="latin1",
-                ) as f:
-                    f.write(phonebook)
+                ) as file_handle:
+                    file_handle.write(phonebook)
                 logger.info(hdrs)
 
         self.do_disconnect()
