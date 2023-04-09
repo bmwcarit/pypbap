@@ -3,12 +3,18 @@
 # -*- coding: utf-8 -*-
 """Phone Book Access Profile headers"""
 
+import struct
+
 from PyOBEX.headers import *
 from pbapcommon import FILTER_ATTR_DICT
 
 
 # Application Parameters Header Properties
 class AppParamProperty(object):
+    """AppParamProperty Class"""
+
+    tagid = None
+
     def __init__(self, data, encoded=False):
         if encoded:
             self.data = data
@@ -25,6 +31,8 @@ class AppParamProperty(object):
 
 
 class OneByteProperty(AppParamProperty):
+    """OneByteProperty Class"""
+
     length = 1  # byte
     fmt = ">B"
 
@@ -32,11 +40,13 @@ class OneByteProperty(AppParamProperty):
         return super(OneByteProperty, self).encode(struct.pack(self.fmt, data))
 
     def decode(self):
-        headers, data = super(OneByteProperty, self).decode()
+        _, data = super(OneByteProperty, self).decode()
         return struct.unpack(self.fmt, data)[0]
 
 
 class TwoByteProperty(AppParamProperty):
+    """TwoByteProperty Class"""
+
     length = 2  # bytes
     fmt = ">H"
 
@@ -44,11 +54,13 @@ class TwoByteProperty(AppParamProperty):
         return super(TwoByteProperty, self).encode(struct.pack(self.fmt, data))
 
     def decode(self):
-        headers, data = super(TwoByteProperty, self).decode()
+        _, data = super(TwoByteProperty, self).decode()
         return struct.unpack(self.fmt, data)[0]
 
 
 class EightByteProperty(AppParamProperty):
+    """EightByteProperty Class"""
+
     length = 8  # bytes
     fmt = ">Q"
 
@@ -56,7 +68,7 @@ class EightByteProperty(AppParamProperty):
         return super(EightByteProperty, self).encode(struct.pack(self.fmt, data))
 
     def decode(self):
-        headers, data = super(EightByteProperty, self).decode()
+        _, data = super(EightByteProperty, self).decode()
         return struct.unpack(self.fmt, data)[0]
 
 
@@ -75,43 +87,63 @@ class VariableLengthProperty(AppParamProperty):
 
 
 class PBAPType(Type):
+    """PBAPType Class"""
+
     code = 0x42
 
 
 class Order(OneByteProperty):
+    """Order Class"""
+
     tagid = 0x01
 
 
 class SearchValue(VariableLengthProperty):
+    """SearchValue Class"""
+
     tagid = 0x02
 
 
 class SearchAttribute(OneByteProperty):
+    """SearchAttribute Class"""
+
     tagid = 0x03
 
 
 class MaxListCount(TwoByteProperty):
+    """MaxListCount Class"""
+
     tagid = 0x04
 
 
 class ListStartOffset(TwoByteProperty):
+    """ListStartOffset Class"""
+
     tagid = 0x05
 
 
 class Filter(EightByteProperty):
+    """Filter Class"""
+
     tagid = 0x06
     attr_dict = FILTER_ATTR_DICT
 
 
 class Format(OneByteProperty):
+    """Format Class"""
+
     tagid = 0x07
 
 
 class PhonebookSize(TwoByteProperty):
+    """PhonebookSize Class"""
+
     tagid = 0x08
 
 
 class NewMissedCalls(OneByteProperty):
+    """NewMissedCalls Class"""
+
     tagid = 0x09
 
 
@@ -134,6 +166,7 @@ app_parameters_dict = {
 
 
 def extended_decode(self):
+    """Extended version of the 'decode'"""
     # assumption:
     # size of tagid = 1 byte
     # size of length = 1 byte (This is just the data length)
@@ -151,6 +184,7 @@ def extended_decode(self):
 
 
 def extended_encode(self, data_dict):
+    """Extended version of the 'encode'"""
     data = b""
     for item in data_dict.values():
         if item is None:
