@@ -311,22 +311,26 @@ class REPL(cmd2.Cmd):
             list_startoffset=opts.start_offset,
         )
         if result is not None:
-            header, data = result
+            _, data = result
             logger.info("Result of pull_vcard_listing:\n%s", data)
 
-    # @cmd2.options(
-    #     [
-    #         make_option(
-    #             "-f",
-    #             "--filter",
-    #             default=0x00000000,
-    #             type=int,
-    #             help="Attributes filter mask",
-    #         ),
-    #         make_option("-t", "--format", default=0, type=int, help="vcard format"),
-    #     ],
-    #     arg_desc="vcard_handle",
-    # )
+    pull_vcard_entry_parser = cmd2.Cmd2ArgumentParser()
+    pull_vcard_entry_parser.add_argument(
+        "-f",
+        "--filter",
+        default=0x00000000,
+        type=int,
+        help="Attributes filter mask",
+    )
+    pull_vcard_entry_parser.add_argument(
+        "-t",
+        "--format",
+        default=0,
+        type=int,
+        help="vcard format",
+    )
+
+    @cmd2.with_argparser(pull_vcard_entry_parser)
     def do_pull_vcard_entry(self, line, opts):
         """Returns a single vcardentry as per requested options"""
         result = self.client.pull_vcard_entry(
