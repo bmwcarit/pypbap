@@ -33,27 +33,33 @@ class VCard(object):
         vcf_str = ""
         for vcard_prop_dict in self.denormalize(self.to_dict(), version)["vcard"]:
             vcard_property_class = VCardProperties[vcard_prop_dict["type"]]
-            vcf_str += vcard_property_class(vcard_prop_dict, parsed=True).serialize(version)
+            vcf_str += vcard_property_class(vcard_prop_dict, parsed=True).serialize(
+                version
+            )
         return vcf_str
 
     def normalize(self, vcf_dict):
         """converts version dependent vcard dict to version independent one"""
         # removes begin, version, end properties which will be added on denormalization
         vcf_dict_copy = copy.deepcopy(vcf_dict)
-        vcf_dict_copy['vcard'].pop(0)
-        vcf_dict_copy['vcard'].pop(0)
-        vcf_dict_copy['vcard'].pop()
+        vcf_dict_copy["vcard"].pop(0)
+        vcf_dict_copy["vcard"].pop(0)
+        vcf_dict_copy["vcard"].pop()
         return vcf_dict_copy
 
     def denormalize(self, vcf_dict, version="2.1"):
         """converts version independent vcard dict to version dependent one"""
         vcf_dict_copy = copy.deepcopy(vcf_dict)
-        begin_dict = {'values': ['VCARD'], 'type': 'BEGIN', 'parameters': []}
-        version_dict = {'values': ['{version}'.format(version=version)], 'type': 'VERSION', 'parameters': []}
-        end_dict = {'values': ['VCARD'], 'type': 'END', 'parameters': []}
-        vcf_dict_copy['vcard'].insert(0, begin_dict)
-        vcf_dict_copy['vcard'].insert(1, version_dict)
-        vcf_dict_copy['vcard'].append(end_dict)
+        begin_dict = {"values": ["VCARD"], "type": "BEGIN", "parameters": []}
+        version_dict = {
+            "values": ["{version}".format(version=version)],
+            "type": "VERSION",
+            "parameters": [],
+        }
+        end_dict = {"values": ["VCARD"], "type": "END", "parameters": []}
+        vcf_dict_copy["vcard"].insert(0, begin_dict)
+        vcf_dict_copy["vcard"].insert(1, version_dict)
+        vcf_dict_copy["vcard"].append(end_dict)
         return vcf_dict_copy
 
     def to_dict(self):
@@ -94,6 +100,7 @@ class VCard(object):
 
 class VCardProperty(object):
     """Represents property of VCard"""
+
     STR_TEMPLATE = "{type}{sep}{param}:{value}\r\n"
 
     def __init__(self, vcard, parsed=False):
@@ -103,10 +110,12 @@ class VCardProperty(object):
         """Serializes the current vcard property into string"""
         vcf_dict = self.denormalize(self.vcf_dict, version)
         params = self._tuples_to_params(vcf_dict["parameters"])
-        vcf_result = self.STR_TEMPLATE.format(type=vcf_dict["type"],
-                                              sep=";" if params else "",
-                                              param=params,
-                                              value=";".join([item.encode('utf-8') for item in vcf_dict["values"]]))
+        vcf_result = self.STR_TEMPLATE.format(
+            type=vcf_dict["type"],
+            sep=";" if params else "",
+            param=params,
+            value=";".join([item.encode("utf-8") for item in vcf_dict["values"]]),
+        )
         return vcf_result
 
     def to_dict(self):
@@ -156,7 +165,7 @@ class VCardProperty(object):
         vcf_dict = {
             "type": type_,
             "values": rhs.split(";"),
-            "parameters": self._params_to_tuple(params)
+            "parameters": self._params_to_tuple(params),
         }
         return self.normalize(vcf_dict)
 
@@ -166,7 +175,9 @@ class VCardProperty_CharsetEncodingParamNormalized(VCardProperty):
 
     def normalize(self, vcf_dict):
         """converts version dependent vcard dict to version independent one"""
-        vcf_dict = super(VCardProperty_CharsetEncodingParamNormalized, self).normalize(vcf_dict)
+        vcf_dict = super(VCardProperty_CharsetEncodingParamNormalized, self).normalize(
+            vcf_dict
+        )
         vcf_dict = copy.deepcopy(vcf_dict)
         charset = None
         encoding = None
@@ -184,14 +195,18 @@ class VCardProperty_CharsetEncodingParamNormalized(VCardProperty):
             value, _ = codecs.lookup(encoding).decode(";".join(vcf_dict["values"]))
             vcf_dict["values"] = value.split(";")
         if charset:
-            value, _ = codecs.lookup(charset).decode(";".join(vcf_dict["values"]), errors="replace")
+            value, _ = codecs.lookup(charset).decode(
+                ";".join(vcf_dict["values"]), errors="replace"
+            )
             vcf_dict["values"] = value.split(";")
         vcf_dict["values"] = ";".join(vcf_dict["values"]).encode("utf8").split(";")
         return vcf_dict
 
     def denormalize(self, vcf_dict, version="2.1"):
         """converts version independent vcard dict to version dependent one"""
-        vcf_dict = super(VCardProperty_CharsetEncodingParamNormalized, self).denormalize(vcf_dict, version)
+        vcf_dict = super(
+            VCardProperty_CharsetEncodingParamNormalized, self
+        ).denormalize(vcf_dict, version)
         vcf_dict = copy.deepcopy(vcf_dict)
         encoding = "QUOTED-PRINTABLE"
         charset = "UTF-8"
@@ -213,12 +228,16 @@ class VCardProperty_BASE64EncodingParamNormalized(VCardProperty):
 
     def normalize(self, vcf_dict):
         """converts version dependent vcard dict to version independent one"""
-        vcf_dict = super(VCardProperty_BASE64EncodingParamNormalized, self).normalize(vcf_dict)
+        vcf_dict = super(VCardProperty_BASE64EncodingParamNormalized, self).normalize(
+            vcf_dict
+        )
         vcf_dict = copy.deepcopy(vcf_dict)
         normalized_params = []
         for param in vcf_dict["parameters"]:
             if param[0].upper() == "ENCODING":
-                normalized_params.append(("ENCODING", "b"))  # key property only have base64 encoding
+                normalized_params.append(
+                    ("ENCODING", "b")
+                )  # key property only have base64 encoding
             elif param[0].upper() == "" or param[0].upper() == "TYPE":
                 normalized_params.append(("TYPE", param[1]))
             else:
@@ -228,15 +247,21 @@ class VCardProperty_BASE64EncodingParamNormalized(VCardProperty):
 
     def denormalize(self, vcf_dict, version="2.1"):
         """converts version independent vcard dict to version dependent one"""
-        vcf_dict = super(VCardProperty_BASE64EncodingParamNormalized, self).denormalize(vcf_dict, version)
+        vcf_dict = super(VCardProperty_BASE64EncodingParamNormalized, self).denormalize(
+            vcf_dict, version
+        )
         vcf_dict = copy.deepcopy(vcf_dict)
         denormalized_params = []
         for param in vcf_dict["parameters"]:
             if param[0].upper() == "ENCODING":
                 if version == "2.1":
-                    denormalized_params.append(("ENCODING", "BASE64"))  # key property only have base64 encoding
+                    denormalized_params.append(
+                        ("ENCODING", "BASE64")
+                    )  # key property only have base64 encoding
                 elif version == "3.0":
-                    denormalized_params.append(("ENCODING", "b"))  # key property only have base64 encoding
+                    denormalized_params.append(
+                        ("ENCODING", "b")
+                    )  # key property only have base64 encoding
                 else:
                     raise TypeError("Unsupported version")
             elif param[0].upper() == "TYPE":

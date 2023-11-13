@@ -1,0 +1,3 @@
+git+https://github.com/pybluez/pybluez
+cmd2
+git+https://github.com/BlackLight/PyOBEX.git

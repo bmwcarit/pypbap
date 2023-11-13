@@ -19,11 +19,8 @@ setup(
     keywords="pbap",
     zip_safe=False,
     packages=find_packages(),
-    dependency_links=["https://bitbucket.org/dboddie/pyobex/get/tip.zip#egg=pyobex-0.26"],
-    install_requires=[
-        "pybluez==0.22",
-        "pyobex>=0.26",
-        "pymongo",
-        "cmd2==0.8.8"
+    dependency_links=[
+        "https://bitbucket.org/dboddie/pyobex/get/tip.zip#egg=pyobex-0.26"
     ],
+    install_requires=["pybluez==0.22", "pyobex>=0.26", "pymongo", "cmd2==0.8.8"],
 )

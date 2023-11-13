@@ -99,7 +99,9 @@ class VFolderPhoneBook_DB(VFolderPhoneBook):
 
     def listdir(self, path, query={}, projection={"_id": False}, sort=("_id", 1)):
         if not self.isdir(path):
-            raise RuntimeError("Specified path {path} is not a directory.".format(path=path))
+            raise RuntimeError(
+                "Specified path {path} is not a directory.".format(path=path)
+            )
         else:
             db, coll = self._path_to_db_elements(path)
             return list(db[coll].find(query, projection).sort(*sort))
@@ -110,7 +112,14 @@ class VFolderPhoneBook_DB(VFolderPhoneBook):
         else:
             vcard_index = int(os.path.splitext(os.path.basename(path))[0])
             db, coll = self._path_to_db_elements(path)
-            return db[coll].find(query, projection).sort(*sort).skip(vcard_index).limit(1).next()
+            return (
+                db[coll]
+                .find(query, projection)
+                .sort(*sort)
+                .skip(vcard_index)
+                .limit(1)
+                .next()
+            )
 
     def chdir(self, path):
         if not self.exists(path):
@@ -120,7 +129,9 @@ class VFolderPhoneBook_DB(VFolderPhoneBook):
 
     def count(self, path):
         if not self.isdir(path):
-            raise RuntimeError("Specified path {path} is not a directory.".format(path=path))
+            raise RuntimeError(
+                "Specified path {path} is not a directory.".format(path=path)
+            )
         else:
             db, coll = self._path_to_db_elements(path)
             return db[coll].count()
@@ -178,8 +189,12 @@ class VFolderPhoneBook_FS(VFolderPhoneBook):
         abspath = os.path.abspath(os.path.join(self.curdir, path))
         dir_contents = []
         # TODO: Need to add sort, project, query functionalities
-        for pb_object in sorted(os.listdir(abspath), key=lambda x: int(os.path.splitext(x)[0])):
-            vcard_dict = VCard(open(os.path.join(abspath, pb_object)).read(), parsed=False).to_dict()
+        for pb_object in sorted(
+            os.listdir(abspath), key=lambda x: int(os.path.splitext(x)[0])
+        ):
+            vcard_dict = VCard(
+                open(os.path.join(abspath, pb_object)).read(), parsed=False
+            ).to_dict()
             dir_contents.append(vcard_dict)
         return dir_contents
 

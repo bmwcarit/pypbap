@@ -23,10 +23,11 @@ logger = logging.getLogger(__name__)
 
 
 class PbapServer(server.Server):
-
     def __init__(self, address, rootdir="/", use_fs=True):
         server.Server.__init__(self, address)
-        self.vfolder = VFolderPhoneBook_FS(rootdir) if use_fs else VFolderPhoneBook_DB(rootdir)
+        self.vfolder = (
+            VFolderPhoneBook_FS(rootdir) if use_fs else VFolderPhoneBook_DB(rootdir)
+        )
 
     def process_request(self, connection, request):
         """Processes the request from the connection."""
@@ -63,7 +64,9 @@ class PbapServer(server.Server):
         # This is just a overloaded version of obex setpath
         if toparent:
             if self.vfolder.curdir == self.vfolder.rootdir:
-                logger.error("Current directory is same as Root dir, so can't go to parent")
+                logger.error(
+                    "Current directory is same as Root dir, so can't go to parent"
+                )
                 self.send_response(socket, responses.Forbidden())
                 return
             else:
@@ -111,7 +114,9 @@ class PbapServer(server.Server):
             elif decoded_header["Type"] == "x-bt/phonebook":
                 self._pull_phonebook(socket, request, decoded_header)
             else:
-                logger.error("Requested type = %s is not supported yet.", decoded_header["Type"])
+                logger.error(
+                    "Requested type = %s is not supported yet.", decoded_header["Type"]
+                )
                 self.send_response(socket, responses.Bad_Request())
 
     def _pull_vcard_listing(self, socket, request, decoded_header):
@@ -124,7 +129,9 @@ class PbapServer(server.Server):
             self.send_response(socket, responses.Not_Found())
         else:
             phonebook_size = self.vfolder.count(abs_name)
-            search_query = self._get_search_query(app_params["SearchAttribute"], app_params["SearchValue"])
+            search_query = self._get_search_query(
+                app_params["SearchAttribute"], app_params["SearchValue"]
+            )
             # TODO: sorting based on order not works, since handle is not part of db record. it is not proper
             # make the "handle" as part of db record
             sort_key = self._get_sort_key(app_params["Order"])
@@ -136,36 +143,50 @@ class PbapServer(server.Server):
                 return
 
             data = ""
-            res_vcard_list = self._limit_phonebook(vcard_list, app_params["MaxListCount"],
-                                                   app_params["ListStartOffset"])
-            res_vcard_list_range = range(app_params["ListStartOffset"],
-                                         min((app_params["ListStartOffset"] + app_params["MaxListCount"]), 65535))
+            res_vcard_list = self._limit_phonebook(
+                vcard_list, app_params["MaxListCount"], app_params["ListStartOffset"]
+            )
+            res_vcard_list_range = range(
+                app_params["ListStartOffset"],
+                min(
+                    (app_params["ListStartOffset"] + app_params["MaxListCount"]), 65535
+                ),
+            )
             # "NewMissedCalls": This application parameter shall be used in the response when and only when the
             # phone book object is mch. It indicates the number of missed calls that have been
             # received on the PSE since the last PullPhoneBook request on the mch folder, at the
             # point of the request.
             if "mch" in abs_name:
-                response_dict = {'NewMissedCalls': headers.NewMissedCalls(phonebook_size - mch_size)}
+                response_dict = {
+                    "NewMissedCalls": headers.NewMissedCalls(phonebook_size - mch_size)
+                }
                 mch_size = phonebook_size
             else:
                 response_dict = {}
 
-            vcard_listing_object_tmpl = ('<?xml version="1.0"?>\r\n'
-                                         '<!DOCTYPE vcard-listing SYSTEM "vcard-listing.dtd">\r\n'
-                                         '<vCard-listing version="1.0">\r\n'
-                                         '{cards}'
-                                         '</vCard-listing>\r\n')
+            vcard_listing_object_tmpl = (
+                '<?xml version="1.0"?>\r\n'
+                '<!DOCTYPE vcard-listing SYSTEM "vcard-listing.dtd">\r\n'
+                '<vCard-listing version="1.0">\r\n'
+                "{cards}"
+                "</vCard-listing>\r\n"
+            )
             card_tag_tmpl = '<card handle="{handle}" name="{name}"/>\r\n'
             cards = ""
             # TODO: As per spec the handles should be hex??
             for index, vcard in zip(res_vcard_list_range, res_vcard_list):
-                cards += card_tag_tmpl.format(handle="{}.vcf".format(index),
-                                              name=self._get_param_values(vcard, "N"))
+                cards += card_tag_tmpl.format(
+                    handle="{}.vcf".format(index),
+                    name=self._get_param_values(vcard, "N"),
+                )
             data = vcard_listing_object_tmpl.format(cards=cards)
             logger.debug("Sending response success with following data")
             logger.debug("vcard-listing data: \r\n%s", data)
-            self.send_response(socket, responses.Success(),
-                               [headers.End_Of_Body(data), headers.App_Parameters(response_dict)])
+            self.send_response(
+                socket,
+                responses.Success(),
+                [headers.End_Of_Body(data), headers.App_Parameters(response_dict)],
+            )
 
     def _get_param_values(self, vcard, param_name):
         for param in vcard["vcard"]:
@@ -180,14 +201,13 @@ class PbapServer(server.Server):
             logger.error("Requested vcard file doesn't exists")
             self.send_response(socket, responses.Not_Found())
         else:
-            filtered_data = self._filter_attributes(app_params["Filter"],
-                                                    self.vfolder.read(abs_name),
-                                                    app_params["Format"])
+            filtered_data = self._filter_attributes(
+                app_params["Filter"], self.vfolder.read(abs_name), app_params["Format"]
+            )
             data = VCard(filtered_data, parsed=True).serialize(app_params["Format"])
             logger.debug("Sending response success with following data")
             logger.debug("vcard data: \r\n%s", data)
-            self.send_response(socket, responses.Success(), [
-                               headers.End_Of_Body(data)])
+            self.send_response(socket, responses.Success(), [headers.End_Of_Body(data)])
 
     def _pull_phonebook(self, socket, request, decoded_header):
         mch_size = 0  # mch_size for phonebook folder (Don't optimize)
@@ -206,21 +226,28 @@ class PbapServer(server.Server):
                 return
 
             data = ""
-            res_vcard_list = self._limit_phonebook(vcard_list, app_params["MaxListCount"],
-                                                   app_params["ListStartOffset"])
+            res_vcard_list = self._limit_phonebook(
+                vcard_list, app_params["MaxListCount"], app_params["ListStartOffset"]
+            )
             # "NewMissedCalls": This application parameter shall be used in the response when and only when the
             # phone book object is mch. It indicates the number of missed calls that have been
             # received on the PSE since the last PullPhoneBook request on the mch folder, at the
             # point of the request.
             if "mch" in abs_name:
-                response_dict = {'NewMissedCalls': headers.NewMissedCalls(phonebook_size - mch_size)}
+                response_dict = {
+                    "NewMissedCalls": headers.NewMissedCalls(phonebook_size - mch_size)
+                }
                 mch_size = phonebook_size
             else:
                 response_dict = {}
 
             for item in res_vcard_list:
-                filtered_data = self._filter_attributes(app_params["Filter"], item, app_params["Format"])
-                data += VCard(filtered_data, parsed=True).serialize(app_params["Format"])
+                filtered_data = self._filter_attributes(
+                    app_params["Filter"], item, app_params["Format"]
+                )
+                data += VCard(filtered_data, parsed=True).serialize(
+                    app_params["Format"]
+                )
 
             logger.debug("Sending response success with following data")
             logger.debug("phonebook data: \r\n%s", data)
@@ -238,8 +265,13 @@ class PbapServer(server.Server):
                 data_last_chunk = data
             else:
                 while bytes_transferred < datasize:
-                    data_chunk = data[bytes_transferred: (bytes_transferred + max_datalen)]
-                    header_list = [headers.App_Parameters(response_dict), headers.Body(data_chunk)]
+                    data_chunk = data[
+                        bytes_transferred : (bytes_transferred + max_datalen)
+                    ]
+                    header_list = [
+                        headers.App_Parameters(response_dict),
+                        headers.Body(data_chunk),
+                    ]
                     # 'continue' response and process the subsequent requests
                     self.send_response(socket, responses.Continue(), header_list)
                     while True:
@@ -252,7 +284,10 @@ class PbapServer(server.Server):
                     bytes_transferred += max_datalen
                 data_last_chunk = ""
 
-            header_list = [headers.App_Parameters(response_dict), headers.End_Of_Body(data_last_chunk)]
+            header_list = [
+                headers.App_Parameters(response_dict),
+                headers.End_Of_Body(data_last_chunk),
+            ]
             self.send_response(socket, responses.Success(), header_list)
 
     def _get_search_query(self, searchattribute, searchvalue):
@@ -265,7 +300,14 @@ class PbapServer(server.Server):
         else:
             logger.error("Unsupported value for SearchAttribute=%s", searchattribute)
             return {}
-        query = {"vcard": {"$elemMatch": {'type': searchattribute, 'values': {"$in": [searchvalue]}}}}
+        query = {
+            "vcard": {
+                "$elemMatch": {
+                    "type": searchattribute,
+                    "values": {"$in": [searchvalue]},
+                }
+            }
+        }
         return query if searchvalue else {}
 
     def _get_sort_key(self, order):
@@ -282,6 +324,7 @@ class PbapServer(server.Server):
             for param in item["vcard"]:
                 if param["type"] == sort_key[0]:
                     return ";".join(param["values"])
+
         return sorted(vcard_list, key=_key_func)
 
     def _respond_phonebook_size(self, socket, phonebook_size):
@@ -290,11 +333,15 @@ class PbapServer(server.Server):
         # When MaxListCount = 0, the PSE shall ignore all other application parameters that may
         # be present in the request. The response shall include the PhonebookSize application
         # parameter (see Section 5.1.4.5). The response shall not contain any Body header
-        logger.debug("MaxListCount is 0, so responding with PhonebookSize = {}".format(
-            phonebook_size))
-        response_dict = {'PhonebookSize': headers.PhonebookSize(phonebook_size)}
-        self.send_response(socket, responses.Success(), [
-                           headers.App_Parameters(response_dict)])
+        logger.debug(
+            "MaxListCount is 0, so responding with PhonebookSize = {}".format(
+                phonebook_size
+            )
+        )
+        response_dict = {"PhonebookSize": headers.PhonebookSize(phonebook_size)}
+        self.send_response(
+            socket, responses.Success(), [headers.App_Parameters(response_dict)]
+        )
 
     def _decode_header_data(self, request):
         """Decodes all headers in given request and return the decoded values in dict"""
@@ -316,17 +363,23 @@ class PbapServer(server.Server):
                 header_dict["App_Parameters"] = header.decode()
                 logger.info("App Parameters are :")
                 for param, value in header_dict["App_Parameters"].items():
-                    logger.info("{param}: {value}".format(param=param, value=value.decode()))
+                    logger.info(
+                        "{param}: {value}".format(param=param, value=value.decode())
+                    )
             else:
                 logger.error("Some Header data is not yet added in _decode_header_data")
-                raise NotImplementedError("Some Header data is not yet added in _decode_header_data")
+                raise NotImplementedError(
+                    "Some Header data is not yet added in _decode_header_data"
+                )
         return header_dict
 
     def _limit_phonebook(self, vcard_list, max_listcount, list_startoffset=0):
         """limit the phonebook size based on max listcount and list startoffset
         and update the index of phonebook accordingly."""
         vcard_list = vcard_list[list_startoffset:]
-        if max_listcount != 65535:  # Range: 0 <= max_listcount <= 65535 (65535 => Unrestricted)
+        if (
+            max_listcount != 65535
+        ):  # Range: 0 <= max_listcount <= 65535 (65535 => Unrestricted)
             vcard_list = vcard_list[:max_listcount]
         return vcard_list
 
@@ -342,7 +395,9 @@ class PbapServer(server.Server):
         else:
             decoded_app_params["SearchValue"] = ""
         if "SearchAttribute" in app_params:
-            decoded_app_params["SearchAttribute"] = app_params["SearchAttribute"].decode()
+            decoded_app_params["SearchAttribute"] = app_params[
+                "SearchAttribute"
+            ].decode()
         else:
             decoded_app_params["SearchAttribute"] = 0  # Default: Name attribute
         if "MaxListCount" in app_params:
@@ -350,15 +405,21 @@ class PbapServer(server.Server):
         else:
             decoded_app_params["MaxListCount"] = 65535
         if "ListStartOffset" in app_params:
-            decoded_app_params["ListStartOffset"] = app_params["ListStartOffset"].decode()
+            decoded_app_params["ListStartOffset"] = app_params[
+                "ListStartOffset"
+            ].decode()
         else:
             decoded_app_params["ListStartOffset"] = 0  # Default: 0
         if "Filter" in app_params:
             decoded_app_params["Filter"] = app_params["Filter"].decode()
         else:
-            decoded_app_params["Filter"] = 0  # Default: 0 [means should return all the attributes]
+            decoded_app_params[
+                "Filter"
+            ] = 0  # Default: 0 [means should return all the attributes]
         if "Format" in app_params:
-            decoded_app_params["Format"] = "3.0" if app_params["Format"].decode() else "2.1"
+            decoded_app_params["Format"] = (
+                "3.0" if app_params["Format"].decode() else "2.1"
+            )
         else:
             decoded_app_params["Format"] = "2.1"  # Default: v2.1
         if "PhonebookSize" in app_params:
@@ -369,8 +430,11 @@ class PbapServer(server.Server):
 
     def _filter_attributes(self, filter_bitmask, data, vcard_version="2.1"):
         """receives filter bitmask and vcard data as dict then returns the filtered dict"""
-        logger.debug("Filtering attributes for bitmask: {bitmask} data: {data}".format(
-            bitmask=filter_bitmask, data=data))
+        logger.debug(
+            "Filtering attributes for bitmask: {bitmask} data: {data}".format(
+                bitmask=filter_bitmask, data=data
+            )
+        )
         # if filter is 0, return all the attributes
         if filter_bitmask == 0:
             return data
@@ -381,7 +445,9 @@ class PbapServer(server.Server):
             bit = 1 << bitmarker
             if bit & filter_bitmask == bit:
                 unfiltered_attrs.add(attr_tuple[0])
-        logger.debug("Necessary attributes: {unfiltered}".format(unfiltered=unfiltered_attrs))
+        logger.debug(
+            "Necessary attributes: {unfiltered}".format(unfiltered=unfiltered_attrs)
+        )
         for param in data["vcard"][:]:
             attr = param["type"]
             if attr in unfiltered_attrs:
@@ -431,8 +497,15 @@ class PbapServer(server.Server):
         # protocols = [L2CAP_UUID, RFCOMM_UUID, OBEX_UUID]
 
         return server.Server.start_service(
-            self, port, name, uuid, service_classes, service_profiles,
-            provider, description, []
+            self,
+            port,
+            name,
+            uuid,
+            service_classes,
+            service_profiles,
+            provider,
+            description,
+            [],
         )
 
 
@@ -453,17 +526,25 @@ def run_server(device_address, rootdir, use_fs):
 
 
 def main():
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s %(name)s %(levelname)-8s %(message)s')
+    logging.basicConfig(
+        level=logging.DEBUG, format="%(asctime)s %(name)s %(levelname)-8s %(message)s"
+    )
 
     parser = argparse.ArgumentParser(description="Phonebook Access Profile")
-    parser.add_argument("--address", required=True,
-                        help="bluetooth address to start the server")
-    parser.add_argument("--use-fs", action="store_true",
-                        help="Use the phonebook virtual folder stored in filesystem."
-                             "(if not given will use the phonebook from mongodb)")
-    parser.add_argument("--rootdir", help="rootdir of phonebook virtual folder, "
-                                          "required while using filesystem as storage")
+    parser.add_argument(
+        "--address", required=True, help="bluetooth address to start the server"
+    )
+    parser.add_argument(
+        "--use-fs",
+        action="store_true",
+        help="Use the phonebook virtual folder stored in filesystem."
+        "(if not given will use the phonebook from mongodb)",
+    )
+    parser.add_argument(
+        "--rootdir",
+        help="rootdir of phonebook virtual folder, "
+        "required while using filesystem as storage",
+    )
     args = parser.parse_args()
 
     if args.use_fs and args.rootdir is None:
